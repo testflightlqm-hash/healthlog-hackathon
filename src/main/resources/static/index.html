@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>智慧健康日誌</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .badge { padding: 5px 10px; border-radius: 5px; color: white; font-weight: bold; }
+        .risk-低 { background-color: #28a745; }
+        .risk-中 { background-color: #ffc107; color: black; }
+        .risk-高 { background-color: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>智慧健康自我管理系統</h1>
+    <form id="healthForm">
+        <input type="date" id="logDate" required>
+        <input type="number" step="0.1" id="sleepHours" placeholder="睡眠時數" required>
+        <input type="number" id="steps" placeholder="步數" required>
+        <input type="number" id="moodScore" placeholder="心情(1-10)" min="1" max="10" required>
+        <button type="submit">新增紀錄</button>
+    </form>
+    <h2>最新風險評估結果: <span id="riskBadge" class="badge risk-低">尚未評估</span></h2>
+    <table>
+        <thead>
+            <tr><th>日期</th><th>睡眠時數</th><th>步數</th><th>心情</th><th>風險等級</th></tr>
+        </thead>
+        <tbody id="logTableBody"></tbody>
+    </table>
+    <script>
+        async function fetchLogs() {
+            const res = await fetch('/health-logs');
+            const data = await res.json();
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+            data.forEach(log => {
+                tbody.innerHTML += `<tr>
+                    <td>${log.logDate}</td>
+                    <td>${log.sleepHours}</td>
+                    <td>${log.steps}</td>
+                    <td>${log.moodScore}</td>
+                    <td><span class="badge risk-${log.riskLevel}">${log.riskLevel}</span></td>
+                </tr>`;
+            });
+        }
+
+        document.getElementById('healthForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const logData = {
+                logDate: document.getElementById('logDate').value,
+                sleepHours: parseFloat(document.getElementById('sleepHours').value),
+                steps: parseInt(document.getElementById('steps').value),
+                moodScore: parseInt(document.getElementById('moodScore').value)
+            };
+
+            const res = await fetch('/health-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logData)
+            });
+            const result = await res.json();
+            
+            const badge = document.getElementById('riskBadge');
+            badge.textContent = result.riskLevel + '風險';
+            badge.className = 'badge risk-' + result.riskLevel;
+            
+            fetchLogs();
+        });
+        fetchLogs();
+    </script>
+</body>
+</html>
