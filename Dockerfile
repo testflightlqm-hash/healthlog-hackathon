@@ -1,3 +1,4 @@
 FROM eclipse-temurin:17-jdk-alpine
-COPY 你的正確jar檔名.jar app.jar
-CMD ["java", "-jar", "app.jar"]
+COPY . .
+# 執行這個指令來啟動專案，不用先 build
+CMD ["./gradlew", "bootRun"]
